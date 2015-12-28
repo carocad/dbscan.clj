@@ -1,67 +1,95 @@
 (ns dbscan.core
+  "functional implementation of the DBSCAN clustering algorithm as per
+  'https://www.aaai.org/Papers/KDD/1996/KDD96-037.pdf'. Note that the functional
+  implementation is quite different from the original proposed algorithm:
+  - region-query is called at the beginning of the algorithm for all the points
+  - no point is marked as visited but rather each point is compared to the
+    current neighborhood"
   (:require [clojure.set :as cset]
-            [clojure.core.matrix :refer [compute-matrix get-row row-count distance]]
+            [clojure.core.matrix :refer [compute-matrix get-row distance]]
             :reload))
 
 ; the return includes the target point itself
+; data-val is not used but necessary to keep compatibility with region-query
+; functions that might query based on the index
 (defn- region-query
+  "Based on a point to point distance matrix (p2p-dist) find all point-indexes
+  whose distance to the target point is less than eps."
   [p2p-dist eps target]
   (keep-indexed (fn [index value] (if (< value eps) index nil))
                 (get-row p2p-dist target)))
 
-(defn- make-query-fn
+(defn- build-query-fn
+  "based on the provided data, compute the distance among all points and fix
+  that information on the region-query function."
   [data dist-fn]
   ;p2p-dist is diagonal-symetric ... should I create an upper triangular matrix instead?
-  (let [length     (row-count data)
+  (let [length     (count data)
         p2p-dist   (compute-matrix :vectorz [length length]
-                      (fn [i j] (dist-fn (second (get-row data i))
-                                         (second (get-row data j)))))]
+                      (fn [i j] (dist-fn (get-row data i)
+                                         (get-row data j))))]
     (partial region-query p2p-dist)))
 
+; This function can be parallelized provided that query-fn and dist-fn
+;  don't have any side effects
+(defn- find-relations
+  "based on the query function and the eps distance, build a hash-map of
+  [index neighbors]"
+  [data query-fn eps]
+  (into (hash-map) (map (fn [index] [index (query-fn eps index)])
+                        (range (count data)))))
+
 (defn- not-clustered?
+  "check if a point is not present on any cluster.
+  clusters is a sequence of hash-sets"
   [clusters [index _]]
   (not-any? (fn [cluster] (cluster index)) clusters))
 
 (defn- enough-neighbors?
   [[index neighborhood] minpts]
-  (if (> (count neighborhood) minpts)
-    index
-    nil))
+  (if (> (count neighborhood) minpts) index nil))
 
 (defn- cluster
+  "Cluster points around the seed-index that have more than minpts neighbors.
+  The unclassified hash-map is used to know the neighbors of each point"
   [seed minpts unclassified]
   (loop [neighbors (into (hash-set) (unclassified seed))
-         edge      neighbors]
-    (let [far-neighbors     (map #(unclassified %) edge)
-          good-neighboor    (filter #(> (count %) minpts) far-neighbors)
-          unique-neighbors  (into (hash-set) (apply concat good-neighboor))
-          new-neighbors     (filter #(not (neighbors %)) unique-neighbors)]
+         edge      neighbors]; points that are currently being analyzed
+    (let [new-neighbors (->> (map #(unclassified %) edge)
+                             (filter #(> (count %) minpts))
+                             (apply concat)
+                             (into (hash-set))
+                             (cset/difference neighbors))]
       (if (empty? new-neighbors)
         neighbors
         (recur (cset/union neighbors new-neighbors) new-neighbors)))))
 
-; data is a sequence of vectors with index as first value and a vector as
-; second value
-; currently index MUST start at 0 and increase thereon
 (defn DBSCAN
+  "cluster the data points based on the distance eps and the requirement that
+  at least minpts are nearby. Optionally a particular distance and query function
+  can be used. Those default to the Euclidean distance and an square distance
+  matrix.
+  The return value is of the form (clusters noise), where clusters is a vector
+  of sets and noise is a simple sequence."
   ([data eps minpts]
-   (DBSCAN data eps minpts distance (make-query-fn data distance)))
+   (DBSCAN data eps minpts distance (build-query-fn data distance)))
   ([data eps minpts dist-fn]
-   (DBSCAN data eps minpts dist-fn (make-query-fn data dist-fn)))
+   (DBSCAN data eps minpts dist-fn (build-query-fn data dist-fn)))
   ([data eps minpts dist-fn query-fn]
    (loop [clusters     []
-          unclassified (into (hash-map) (map (fn [[index _]] [index (query-fn eps index)])
-                                             data))
+          unclassified (find-relations data query-fn eps)
           seed         (some #(enough-neighbors? % minpts) unclassified)]
      (if (nil? seed)
-       [clusters (map first unclassified)]   ; TODO: make a set with the unclassified points = noise
-       (let [new-clusters       (conj clusters (cluster seed minpts unclassified))
-             still-unclassified (into (hash-map) (filter #(not-clustered? new-clusters %) unclassified))
-             new-seed           (some #(enough-neighbors? % minpts) still-unclassified)]
-         (recur new-clusters still-unclassified new-seed))))))
+       [clusters (map first unclassified)] ; clusters, noise
+       (let [curr-clusters       (conj clusters (cluster seed minpts unclassified))
+             still-unclassified  (into (hash-map) (filter #(not-clustered? curr-clusters %) unclassified))
+             new-seed            (some #(enough-neighbors? % minpts) still-unclassified)]
+         (recur curr-clusters still-unclassified new-seed))))))
 
-; NOTE: I think it is easier to make data be simple sequence of value vectors
-; such that the indexing part is handled internally
+(DBSCAN '([1 2 3] [1 2 3] [1 2 3] [1 2 3] [0 0 0] [0 0 0] [0 0 0]
+          [9 9 9]) 1 2)
 
-(DBSCAN '([0 [1 2 3]] [1 [1 2 3]] [2 [1 2 3]] [3 [1 2 3]] [4 [0 0 0]] [5 [0 0 0]] [6 [0 0 0]]
-          [7 [9 9 9]]) 1 2)
+(DBSCAN [[1,1],[0,1],[1,0],
+         [10,10],[10,13],[13,13],
+         [54,54],[55,55],[89,89],[57,55]]
+        5 2)
