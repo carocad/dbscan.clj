@@ -6,7 +6,8 @@
   - no point is marked as visited but rather each point is compared to the
     current neighborhood"
   (:require [clojure.set :as cset]
-            [clojure.core.matrix :refer [compute-matrix get-row distance]]
+            [clojure.core.matrix :refer [compute-matrix get-row distance
+                                         matrix]]
             :reload))
 
 ; the return includes the target point itself
@@ -93,3 +94,5 @@
          [10,10],[10,13],[13,13],
          [54,54],[55,55],[89,89],[57,55]]
         5 2)
+
+(get (get [[1 2] [3]] 0) 0)
