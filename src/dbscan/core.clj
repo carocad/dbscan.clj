@@ -86,13 +86,3 @@
              still-unclassified  (into (hash-map) (filter #(not-clustered? curr-clusters %) unclassified))
              new-seed            (some #(enough-neighbors? % minpts) still-unclassified)]
          (recur curr-clusters still-unclassified new-seed))))))
-
-(DBSCAN '([1 2 3] [1 2 3] [1 2 3] [1 2 3] [0 0 0] [0 0 0] [0 0 0]
-          [9 9 9]) 1 2)
-
-(DBSCAN [[1,1],[0,1],[1,0],
-         [10,10],[10,13],[13,13],
-         [54,54],[55,55],[89,89],[57,55]]
-        5 2)
-
-(get (get [[1 2] [3]] 0) 0)

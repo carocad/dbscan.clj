@@ -8,10 +8,10 @@ You should note that the algorithm has been modified to adapt to a more function
 since the original algorithm does a lot of in-place state mutations.
 
 ## Usage
-In the following examples, data is a sequence of vectors. Each vector represents
-a point.
+In the following examples, data is a sequence of vectors representing the
+points to cluster.
 
-The DBSCAN function can be used as simply as:
+The DBSCAN function can be used as:
 ```Clojure
 (DBSCAN data eps minpts)
 ```
