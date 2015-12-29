@@ -6,30 +6,25 @@
   - no point is marked as visited but rather each point is compared to the
     current neighborhood"
   (:require [clojure.set :as cset]
-            [clojure.core.matrix :refer [compute-matrix get-row distance
-                                         matrix]]
+            [dbscan.symmat :as sym]
+            [dbscan.util :refer [euclidean-distance]]
             :reload))
-
-; the return includes the target point itself
-; data-val is not used but necessary to keep compatibility with region-query
-; functions that might query based on the index
-(defn- region-query
-  "Based on a point to point distance matrix (p2p-dist) find all point-indexes
-  whose distance to the target point is less than eps."
-  [p2p-dist eps target]
-  (keep-indexed (fn [index value] (if (< value eps) index nil))
-                (get-row p2p-dist target)))
 
 (defn- build-query-fn
   "based on the provided data, compute the distance among all points and fix
   that information on the region-query function."
   [data dist-fn]
-  ;p2p-dist is diagonal-symetric ... should I create an upper triangular matrix instead?
-  (let [length     (count data)
-        p2p-dist   (compute-matrix :vectorz [length length]
-                      (fn [i j] (dist-fn (get-row data i)
-                                         (get-row data j))))]
+  (let [p2p-dist   (sym/compute-triangular (count data)
+                       (fn [i j] (dist-fn (get data i) (get data j))))]
     (partial region-query p2p-dist)))
+
+; the return includes the target point itself
+(defn- region-query
+  "Based on a point to point distance matrix (p2p-dist) find all point-indexes
+  whose distance to the target point is less than eps."
+  [p2p-dist eps target]
+  (keep-indexed (fn [index value] (if (< value eps) index nil))
+                (sym/symmetric-row p2p-dist target)))
 
 ; This function can be parallelized provided that query-fn and dist-fn
 ;  don't have any side effects
@@ -73,7 +68,7 @@
   The return value is of the form (clusters noise), where clusters is a vector
   of sets and noise is a simple sequence."
   ([data eps minpts]
-   (DBSCAN data eps minpts distance (build-query-fn data distance)))
+   (DBSCAN data eps minpts euclidean-distance (build-query-fn data euclidean-distance)))
   ([data eps minpts dist-fn]
    (DBSCAN data eps minpts dist-fn (build-query-fn data dist-fn)))
   ([data eps minpts dist-fn query-fn]

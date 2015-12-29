@@ -4,4 +4,4 @@
   :license {:name "LGPL v3"
             :url "https://github.com/carocad/dbscan.clj/blob/master/LICENSE"}
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [net.mikera/vectorz-clj "0.37.0" :exclusions [org.clojure/clojure]]])
+                 [org.clojure/math.numeric-tower "0.0.4"]])

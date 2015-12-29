@@ -8,8 +8,8 @@ You should note that the algorithm has been modified to adapt to a more function
 since the original algorithm does a lot of in-place state mutations.
 
 ## Usage
-In the following examples, data is a sequence of vectors representing the
-points to cluster.
+*data* must be a vector of vectors representing the points to cluster. This is
+due to the difference in lookup performance between list and vectors in clojure.
 
 The DBSCAN function can be used as:
 ```Clojure
