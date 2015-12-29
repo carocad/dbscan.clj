@@ -19,9 +19,14 @@ DBSCAN returns a vector whose first value is a vector of clusters (hash-sets) an
 whose second value is a sequence of points classified as noise.
 
 DBSCAN uses the Euclidean distance as a default metric and an square distance matrix
-as a region-query function. It is also possible to use a custom distance and a region-query
-function as 4th and 5th parameters. Please note that both the distance and the region-query function
-MUST be free of side effects. Also, the region-query function should be callable as:
+(represented as a lower triangular matrix) as a region-query function. It is also possible
+to use a custom distance and a region-query function as 4th and 5th parameters. Both the
+distance and the region-query function MUST be free of side effects.
+Also the distance function should comply with the second and third properties of
+[metric functions](https://en.wikipedia.org/wiki/Metric_%28mathematics%29). Otherwise
+you would have to use your own region-query function in combination with your distance function.
+
+The region-query function should be callable as:
 ```Clojure
 (region-query eps index)
 ```
