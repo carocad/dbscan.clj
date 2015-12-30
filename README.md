@@ -12,6 +12,8 @@ This project is still under heavy development, beware of the version number.
 (semantic versioning)
 
 ## Usage
+[![Clojars Project](http://clojars.org/dbscan/latest-version.svg)](http://clojars.org/dbscan)
+
 *data* must be a vector of vectors representing the points to cluster. This is
 due to the difference in lookup performance between list and vectors in clojure.
 
