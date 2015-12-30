@@ -9,7 +9,7 @@
             ;[incanter.core :as incanter]
             ))
 
-(def num-pts (first (gen/sample (gen/choose 5 20) 1)))
+(def num-pts (first (gen/sample (gen/choose 100 1000) 1)))
 (def eps     (first (gen/sample (gen/choose 5 20) 1)))
 (def min-pts (/ num-pts 100))
 (def limit   (/ eps 3))
@@ -31,7 +31,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TEST ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defspec line-simple
-  100
+  30
   (prop/for-all [L1      line-cluster]
     (let [clusters (DBSCAN L1 eps min-pts)]
       (and (= (count (second clusters)) 0) ; no noise
@@ -40,7 +40,7 @@
 ;(tc/quick-check 100 line-simple)
 
 (defspec line-noise
-  100
+  30
   (prop/for-all [L1      line-cluster
                  ran-pts noise]
     (let [data     (concat L1 ran-pts)
