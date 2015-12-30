@@ -10,14 +10,6 @@
             [dbscan.util :refer [euclidean-distance]]
             :reload))
 
-(defn- build-query-fn
-  "based on the provided data, compute the distance among all points and fix
-  that information on the region-query function."
-  [data dist-fn]
-  (let [p2p-dist   (sym/compute-triangular (count data)
-                       (fn [i j] (dist-fn (get data i) (get data j))))]
-    (partial region-query p2p-dist)))
-
 ; the return includes the target point itself
 (defn- region-query
   "Based on a point to point distance matrix (p2p-dist) find all point-indexes
@@ -25,6 +17,14 @@
   [p2p-dist eps target]
   (keep-indexed (fn [index value] (if (< value eps) index nil))
                 (sym/symmetric-row p2p-dist target)))
+
+(defn- build-query-fn
+  "based on the provided data, compute the distance among all points and fix
+  that information on the region-query function."
+  [data dist-fn]
+  (let [p2p-dist   (sym/compute-triangular (count data)
+                       (fn [i j] (dist-fn (get data i) (get data j))))]
+    (partial region-query p2p-dist)))
 
 ; This function can be parallelized provided that query-fn and dist-fn
 ;  don't have any side effects

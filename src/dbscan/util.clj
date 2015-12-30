@@ -1,7 +1,7 @@
 (ns dbscan.util
   (:require [clojure.math.numeric-tower :as math]))
 
-(defn- pow2
+(defn pow2
   "Uses the numeric tower expt to square a number"
   [x]
   (math/expt x 2))

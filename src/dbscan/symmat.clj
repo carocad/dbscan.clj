@@ -1,5 +1,6 @@
 (ns dbscan.symmat
-  "implementation of a lower-triangular matrix computation and get functions")
+  "implementation of a symmetric matrix as a lower-triangular matrix computation
+  and get functions.")
 
 (defn compute-triangular
   "computes a triangular vector of vectors to represent a symmetric matrix
