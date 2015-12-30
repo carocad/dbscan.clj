@@ -14,22 +14,19 @@
 (def min-pts (/ num-pts 100))
 (def limit   (/ eps 3))
 
-; line specific parameters
-(def slope (first (gen/sample (gen/choose -10 10) 1)))
-(def b     (first (gen/sample (gen/choose -10 10) 1)))
+(def noise
+  (let [value     (gen/double* {:infinite? false :NaN? false :min -100 :max 100})
+        couple    (gen/tuple value value)]
+    (gen/vector couple (Math/ceil (/ num-pts 50)))))
 
 (def line-cluster
-  (let [x         (gen/vector (gen/double* {:infinite? false :NaN? false :min -50 :max 50}) num-pts)
+  (let [slope (first (gen/sample (gen/choose -10 10) 1))
+        b     (first (gen/sample (gen/choose -10 10) 1))
+        x         (gen/vector (gen/double* {:infinite? false :NaN? false :min -50 :max 50}) num-pts)
         line-fn  #(geo/line slope b %)
         noise-fn  (partial geo/add-noise limit)
         line-pts  (gen/bind x #(gen/return (map line-fn %)))]
     (gen/bind line-pts #(gen/return (map noise-fn %)))))
-
-(def noise
-  (let [value     (gen/double* {:infinite? false :NaN? false :min -50 :max 50})
-        couple    (gen/tuple value value)]
-    (gen/vector couple (Math/ceil (/ num-pts 50)))))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TEST ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

@@ -1,4 +1,5 @@
 # dbscan
+[![Build Status](https://travis-ci.org/carocad/dbscan.clj.svg?branch=master)](https://travis-ci.org/carocad/dbscan.clj)
 [![License](https://img.shields.io/badge/license-LGPL%20v3-blue.svg)](https://github.com/carocad/dbscan.clj/blob/master/LICENSE)
 
 A Clojure library that implements a functional version of DBSCAN.
@@ -6,6 +7,9 @@ You can find the original algorithm [here](https://www.aaai.org/Papers/KDD/1996/
 
 You should note that the algorithm has been modified to adapt to a more functional approach
 since the original algorithm does a lot of in-place state mutations.
+
+This project is still under heavy development, beware of the version number.
+(semantic versioning)
 
 ## Usage
 *data* must be a vector of vectors representing the points to cluster. This is
@@ -39,6 +43,23 @@ The following example was taken from: https://www.npmjs.com/package/density-clus
         5 2)
 ; [[#{0 1 2} #{7 6 9} #{4 3 5}] (8)]
 ```
+
+##Test
+simply do
+```bash
+$ git clone https://github.com/carocad/dbscan.clj.git
+$ cd ./dbscan.clj
+$ lein test
+```
+
+The performed test are much more interesting than the previously shown example. I encourage you
+to add even more (generative) tests.
+
+##Miscelaneous
+- There is currently no benchmark
+- The algorithm is still very basic, probably a lot of performance optimizations can be made
+- Some more clustering test will be eventually added to check the proper functioning of the algorithm
+- Don't expect this repository to include an R\* tree indexing structure. That is outside of the scope of this project. If you know one, by all means let me know so that I can link it here for other people to use them together.
 
 ## License
 
